@@ -1,5 +1,7 @@
 # Video Object Detection and Tracking using the Attention Mechanism: A Comparative Study
-The objective of this study is to explore the potential of advanced deep learning techniques for video object detection and tracking. Our focus is on DETR and its variants, including Deformable DETR, Efficient DETR, TransVOD, and TrackFormer. To accomplish this goal, we will evaluate the capabilities of these models using well-known benchmark datasets such as MOT20 and YouTube-Objects. By doing so, we aim to uncover the strengths and limitations of these models and provide valuable insights for future research in this field.
+The objective of this study is to explore the potential of advanced deep learning techniques for video object detection and tracking. Our focus is on DETR and its variants, including Deformable DETR, Efficient DETR, TransVOD, and TrackFormer. 
+
+To accomplish this goal, we will evaluate the capabilities of these models using well-known benchmark datasets such as MOT20 and YouTube-Objects. By doing so, we aim to uncover the strengths and limitations of these models and provide valuable insights for future research in this field.
 
 ## Table of Contents
 - [Video Object Detection and Tracking using the Attention Mechanism: A Comparative Study](#video-object-detection-and-tracking-using-the-attention-mechanism-a-comparative-study)

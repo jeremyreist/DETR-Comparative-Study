@@ -20,8 +20,12 @@ The following is the folder structure of the project, which provides an overview
 DETR-COMPARATIVE-STUDY
 │
 ├── data                      # Dataset storage and processing
-│   ├── MOT20                 # MOT20 dataset
-│   ├── YouTube-Objects       # YouTube-Objects dataset
+│   ├── MOT20                 # Contains [MOT20 datase](https://motchallenge.net/data/MOT20/)
+│   │   └── MOT20
+│   │       └── test
+│   │       └── train
+│   ├── YouTube-Objects       # Contains [YouTube-Objects "car" dataset](https://data.vision.ee.ethz.ch/cvl/youtube-objects/)
+│   │   └── car
 │   └── processed_data        # Processed data for evaluation
 │
 ├── models                    # Pre-trained models for evaluation

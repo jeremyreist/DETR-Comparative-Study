@@ -20,16 +20,17 @@ The following is the folder structure of the project, which provides an overview
 DETR-COMPARATIVE-STUDY
 │
 ├── data                      # Dataset storage and processing
-│   ├── MOT20                 # Contains [MOT20 datase](https://motchallenge.net/data/MOT20/)
+│   ├── MOT20                 # Contains [MOT20](https://motchallenge.net/data/MOT20/) dataset
 │   │   └── MOT20
 │   │       └── test
 │   │       └── train
-│   ├── YouTube-Objects       # Contains [YouTube-Objects "car" dataset](https://data.vision.ee.ethz.ch/cvl/youtube-objects/)
+│   ├── YouTube-Objects       # Contains [YouTube-Objects "Car"](https://data.vision.ee.ethz.ch/cvl/youtube-objects/) dataset
 │   │   └── car
 │   └── processed_data        # Processed data for evaluation
 │
 ├── models                    # Pre-trained models for evaluation
-│   ├── detr                  
+│   ├── detr   
+│   │    └── detr.py               
 │   ├── deformable_detr       
 │   ├── efficient_detr        
 │   ├── transvod              
@@ -37,10 +38,8 @@ DETR-COMPARATIVE-STUDY
 │
 ├── notebooks                 # Jupyter notebooks for analysis and visualization
 │
-├── src                       # Source code for the project
-│   ├── data_processing.py    # Data preprocessing and augmentation script
-│   ├── utils.py              # Utility functions and classes
-│   └── main.py               # Main script for training and evaluation
+├── utils.py                  # Utility functions and classes
+├── main.py                   # Main script for evaluation
 │
 ├── results                   # Output folder for results and performance metrics
 │            
@@ -50,7 +49,20 @@ DETR-COMPARATIVE-STUDY
 ```
 
 ## Installation
-(To be updated once dependencies are defined)
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/DETR-COMPARATIVE-STUDY.git
+cd DETR-COMPARATIVE-STUDY
+```
+2. Ensure you have [Conda](https://docs.conda.io/en/latest/miniconda.html) installed
+3. Install the required packages:
+```bash
+pip install -r requirements.txt
+```
+4. Run the setup script to download datasets
+```bash
+python setup.py
+```
 
 ## Usage
 (To be updated with instructions on how to use the project)

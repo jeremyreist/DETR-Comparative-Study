@@ -56,19 +56,19 @@ git clone https://github.com/yourusername/DETR-COMPARATIVE-STUDY.git
 cd DETR-COMPARATIVE-STUDY
 ```
 
-2. Create and activate a virtual environment to install the required packages:
+1. Create and activate a virtual environment:
 ```bash
 python -m venv venv
 source venv/bin/activate  # on Linux or macOS
 venv\Scripts\activate.bat  # on Windows
 ```
 
-3. Install the required packages:
+1. Install the required packages:
 ```bash
 pip install -r requirements.txt
 ```
 
-4. Run the setup script to download datasets:
+1. Run the setup script to download datasets:
 ```bash
 python setup.py
 ```

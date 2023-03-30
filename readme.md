@@ -28,9 +28,8 @@ DETR-COMPARATIVE-STUDY
 │   │   └── car
 │   └── processed_data        # Processed data for evaluation
 │
-├── models                    # Pre-trained models for evaluation
-│   ├── detr   
-│   │    └── detr.py               
+├── testing_models                    # Pre-trained models for evaluation
+│   ├── detr.py                 
 │   ├── deformable_detr       
 │   ├── efficient_detr        
 │   ├── transvod              
@@ -54,12 +53,11 @@ DETR-COMPARATIVE-STUDY
 git clone https://github.com/yourusername/DETR-COMPARATIVE-STUDY.git
 cd DETR-COMPARATIVE-STUDY
 ```
-2. Ensure you have [Conda](https://docs.conda.io/en/latest/miniconda.html) installed
-3. Install the required packages:
+2. Install the required packages:
 ```bash
 pip install -r requirements.txt
 ```
-4. Run the setup script to download datasets
+3. Run the setup script to download datasets
 ```bash
 python setup.py
 ```

@@ -69,5 +69,5 @@ def detr_yt_objects(input_folder, output_video):
 
 
 input_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data/YouTube-Objects/car/data/0001/shots/002/')
-output_video = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'output_video_002.mp4')
+output_video = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'results/output_video_002.mp4')
 detr_yt_objects(input_folder, output_video)

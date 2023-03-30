@@ -8,14 +8,26 @@ torch.set_grad_enabled(False)
 import ssl
 ssl._create_default_https_context = ssl._create_unverified_context
 
-# for output bounding box post-processing
+# This function is for output bounding box post-processing. It converts bounding boxes
+# from center-x, center-y, width, height (cxcywh) format to x_min, y_min, x_max, y_max (xyxy) format.
 def box_cxcywh_to_xyxy(x):
+    # Split the input tensor into its components: center-x, center-y, width, and height
     x_c, y_c, w, h = x.unbind(1)
-    b = [(x_c - 0.5 * w), (y_c - 0.5 * h),
-         (x_c + 0.5 * w), (y_c + 0.5 * h)]
+
+    # Calculate the coordinates by subtracting/adding half of the width and height from the center coordinates
+    x_min = x_c - 0.5 * w
+    y_min = y_c - 0.5 * h
+    x_max = x_c + 0.5 * w
+    y_max = y_c + 0.5 * h
+
+    # Combine the calculated coordinates into a list of bounding box values
+    b = [x_min, y_min, x_max, y_max]
+
+    # Stack the bounding box values along the second dimension to create the output tensor
     return torch.stack(b, dim=1)
 
 def rescale_bboxes(out_bbox, size):
+    # Rescale bounding boxes from [0; 1] to the original image scale
     img_w, img_h = size
     b = box_cxcywh_to_xyxy(out_bbox)
     b = b * torch.tensor([img_w, img_h, img_w, img_h], dtype=torch.float32)

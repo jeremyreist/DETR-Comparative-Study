@@ -39,6 +39,7 @@ DETR-COMPARATIVE-STUDY
 │
 ├── utils.py                  # Utility functions and classes
 ├── main.py                   # Main script for evaluation
+├── setup.py                  # Main script for setting up data
 │
 ├── results                   # Output folder for results and performance metrics
 │            

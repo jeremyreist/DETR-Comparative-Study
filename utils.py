@@ -25,7 +25,7 @@ CLASSES = [
 COLORS = [[0.000, 0.447, 0.741], [0.850, 0.325, 0.098], [0.929, 0.694, 0.125],
           [0.494, 0.184, 0.556], [0.466, 0.674, 0.188], [0.301, 0.745, 0.933]]
 
-def visualize_detection_results(pil_img, prob, boxes, display_output=False, return_image=False):
+def visualize_detection_results(pil_img, prob, boxes, selected_class, display_output=False, return_image=False):
     """
     This function visualizes the results of object detection by drawing bounding
     boxes around detected objects and displaying class labels with their
@@ -37,13 +37,14 @@ def visualize_detection_results(pil_img, prob, boxes, display_output=False, retu
         boxes (List[List[float]]): List of bounding boxes for each detected object.
         display_output (bool, optional): Whether to display the annotated image. Defaults to False.
         return_image (bool, optional): Whether to return the annotated image as a NumPy array. Defaults to False.
+        selected_class (str): The class to be detected.
 
     Returns:
         np.ndarray: The annotated image as a NumPy array (if return_image is True).
     """
 
     # Create a new figure with a specified size and display the input image in the figure
-    plt.figure(figsize=(16, 10))
+    plt.figure(figsize=(16, 9))
     plt.imshow(pil_img)
 
     # Get the current axes
@@ -54,20 +55,21 @@ def visualize_detection_results(pil_img, prob, boxes, display_output=False, retu
 
     # Iterate through probabilities, bounding boxes, and colors
     for p, (xmin, ymin, xmax, ymax), c in zip(prob, boxes.tolist(), colors):
-        # Draw a bounding box on the image using the specified color and linewidth
-        ax.add_patch(plt.Rectangle((xmin, ymin), xmax - xmin, ymax - ymin,
-                                   fill=False, color=c, linewidth=3))
-
         # Determine the class with the highest probability
-        cl = p.argmax()
+        cl = np.argmax(p)
 
-        # Create a text label with the class name and probability
-        text = f'{CLASSES[cl]}: {p[cl]:0.2f}'
+        if selected_class == cl:
+            # Create a text label with the class name and probability
+            text = f'{CLASSES[cl]}: {p[cl]:0.2f}'
 
-        # Add the text label to the image at the top-left corner of the bounding box
-        ax.text(xmin, ymin, text, fontsize=15,
-                bbox=dict(facecolor='yellow', alpha=0.5))
-
+            # Add the text label to the image at the top-left corner of the bounding box
+            ax.text(xmin, ymin, text, fontsize=15,
+                    bbox=dict(facecolor='yellow', alpha=0.5))
+            
+            # Draw a bounding box on the image using the specified color and linewidth
+            ax.add_patch(plt.Rectangle((xmin, ymin), xmax - xmin, ymax - ymin,
+                                    fill=False, color=c, linewidth=3))
+            
     # Remove the axes from the figure
     plt.axis('off')
 
@@ -79,7 +81,7 @@ def visualize_detection_results(pil_img, prob, boxes, display_output=False, retu
     if return_image:
         # Save the plot to a buffer as an RGB image
         buf = io.BytesIO()
-        plt.savefig(buf, format='png')
+        plt.savefig(buf, format='png', bbox_inches='tight')
         buf.seek(0)
         im = Image.open(buf)
 

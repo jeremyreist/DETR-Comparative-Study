@@ -4,6 +4,7 @@ import urllib.request
 from pathlib import Path
 from tqdm import tqdm
 import tarfile
+import ssl
 
 # Custom function for tqdm progress bar
 class TqdmUpTo(tqdm):
@@ -19,7 +20,24 @@ def download_and_unzip(url, save_path, unzip_path):
 
         print(f"Downloading dataset from {url}")
         with TqdmUpTo(unit='B', unit_scale=True, miniters=1, desc=url.split('/')[-1]) as t:
-            urllib.request.urlretrieve(url, save_path, reporthook=t.update_to)
+            # Set a custom user agent
+            headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36'}
+            req = urllib.request.Request(url, headers=headers)
+
+            # Disable SSL certificate verification
+            ctx = ssl.create_default_context()
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_NONE
+
+            with urllib.request.urlopen(req, context=ctx) as u:
+                with open(save_path, 'wb') as f:
+                    block_sz = 8192
+                    while True:
+                        buf = u.read(block_sz)
+                        if not buf:
+                            break
+                        f.write(buf)
+                        t.update(len(buf))
 
         if 'tar' not in save_path:
             print(f"Unzipping dataset to {unzip_path}")
@@ -31,6 +49,7 @@ def download_and_unzip(url, save_path, unzip_path):
 
         os.remove(save_path)
 
+
 # Check and download MOT20 dataset
 mot20_url = "https://motchallenge.net/data/MOT20.zip"
 mot20_save_path = "data/MOT20/MOT20.zip"
@@ -38,9 +57,16 @@ mot20_unzip_path = "data/MOT20/"
 if not os.path.exists(mot20_unzip_path):
     download_and_unzip(mot20_url, mot20_save_path, mot20_unzip_path)
 
-# Check and download YouTube-Objects "car" dataset
-yt_objects_url = "https://data.vision.ee.ethz.ch/cvl/youtube-objects/categories/car.tar.gz"
-yt_objects_save_path = "data/YouTube-Objects/car.tar.gz"
-yt_objects_unzip_path = "data/YouTube-Objects/"
+# Check and download YouTube-Objects 2.2 "car" dataset
+yt_objects_url = "http://calvin-vision.net/bigstuff/youtube-objectsv2/car.tar.gz"
+yt_objects_save_path = "data/YouTube-Objects-2.2/car.tar.gz"
+yt_objects_unzip_path = "data/YouTube-Objects-2.2/"
+if not os.path.exists(yt_objects_unzip_path):
+    download_and_unzip(yt_objects_url, yt_objects_save_path, yt_objects_unzip_path)
+
+# Check and download YouTube-Objects 2.2 ground truth
+yt_objects_url = "http://calvin-vision.net/bigstuff/youtube-objectsv2/GroundTruth.tar.gz"
+yt_objects_save_path = "data/YouTube-Objects-2.2/GroundTruth.tar.gz"
+yt_objects_unzip_path = "data/YouTube-Objects-2.2/GroundTruth"
 if not os.path.exists(yt_objects_unzip_path):
     download_and_unzip(yt_objects_url, yt_objects_save_path, yt_objects_unzip_path)

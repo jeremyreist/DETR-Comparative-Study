@@ -332,3 +332,5 @@ def process_mot20(video_name, model_type):
 # Example usage:
 process_mot20("MOT20-07", "detr")
 process_mot20("MOT20-07", "deformable-detr")
+
+#TODO: fix calculateMIOU function

@@ -8,7 +8,7 @@ from scipy.io import loadmat
 from transformers import AutoImageProcessor, DeformableDetrForObjectDetection
 
 
-SELECTED_CLASS = 3 # 3 is for car, 1 is for person
+SELECTED_CLASS = 1 # 3 is for car, 1 is for person
 
 # Applies DETR object detection on a sequence of frames, visualizes the results, and saves them as a video.
 def detr_yt_objects(input_folder, output_video, frame_limit):
@@ -108,7 +108,10 @@ def deformable_detr_yt_objects(input_folder, output_video, frame_limit):
         
         for score, label, box in zip(results["scores"], results["labels"], results["boxes"]):
             if label.item() == SELECTED_CLASS:
-                prob.append([0, 0, 0, score.item()])
+                if SELECTED_CLASS == 3:
+                    prob.append([0, 0, 0, score.item()])
+                else:
+                    prob.append([0, score.item()])
                 boxes.append(box.tolist())
 
         predicted_boxes.append(boxes)
@@ -219,7 +222,7 @@ def calculateMIoU(predictions, gt_boxes):
 
 
 # Processes a sequence of frames using either the DETR object detection model or a baseline method and calculates the Mean IoU for the ground truth.
-def process_shot(number_of_frames, model_type):
+def process_yt_obj(number_of_frames, model_type):
     # Define the input folder path containing YouTube-Objects dataset
     input_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), f'data/YouTube-Objects-2.2/car/')
     
@@ -271,7 +274,61 @@ def process_shot(number_of_frames, model_type):
 
 # Example usage:
 # TODO: add timing to this
-process_shot(20, 'deformable-detr') # MIOU 0.887
-process_shot(20, 'detr') # MIOU 0.905
-process_shot(500, 'deformable-detr') # 27:44 - MIOU 0.864
-process_shot(500, 'detr') # 10:57 - MIOU 0.9065
+process_yt_obj(20, 'deformable-detr') # MIOU 0.887
+process_yt_obj(20, 'detr') # MIOU 0.905
+process_yt_obj(500, 'deformable-detr') # 27:44 - MIOU 0.864
+process_yt_obj(500, 'detr') # 10:57 - MIOU 0.9065
+
+
+def process_mot20(video_name, model_type):
+    base_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data/MOT20/MOT20/test/")
+    input_folder = os.path.join(base_folder, video_name, "img1")
+    det_txt = os.path.join(base_folder, video_name, "det/det.txt")
+
+    # Load ground truth bounding boxes from the det.txt file
+    gt_boxes = {}
+    with open(det_txt, "r") as f:
+        for line in f:
+            frame_id, _, x, y, w, h, _, _, _, _ = map(float, line.strip().split(","))
+            frame_id = int(frame_id)
+            if frame_id not in gt_boxes:
+                gt_boxes[frame_id] = []
+            gt_boxes[frame_id].append([x, y, x + w, y + h])
+
+    # Define output video and pickle file paths
+    output_video = os.path.join(os.path.dirname(os.path.abspath(__file__)), f'results/MOT20-{video_name}-{model_type}.mp4')
+    pickle_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), f'results/MOT20-{video_name}-{model_type}.pkl')
+
+    # Check if the model type is 'detr'
+    if model_type == 'detr':
+        # Load precomputed DETR predictions if available, otherwise run DETR on the dataset
+        if os.path.exists(pickle_path):
+            detr_preds = pickle.load(open(pickle_path, 'rb'))
+        else:
+            detr_preds = detr_yt_objects(input_folder, output_video, -1)  # set frame_limit to -1 to use all frames
+            pickle.dump(detr_preds, open(pickle_path, 'wb'))
+
+        # Calculate Mean IoU for ground truth and DETR predictions
+        miou = calculateMIoU(detr_preds, gt_boxes)
+        print("Mean IoU for ground truth: {}".format(miou))
+
+    elif model_type == 'deformable-detr':
+        # Load precomputed deformable DETR predictions if available, otherwise run it on the dataset
+        if os.path.exists(pickle_path):
+            detr_preds = pickle.load(open(pickle_path, 'rb'))
+        else:
+            detr_preds = deformable_detr_yt_objects(input_folder, output_video, -1)  # set frame_limit to -1 to use all frames
+            pickle.dump(detr_preds, open(pickle_path, 'wb'))
+
+        # Calculate Mean IoU for ground truth and DETR predictions
+        miou = calculateMIoU(detr_preds, gt_boxes)
+        print("Mean IoU for ground truth: {}".format(miou))
+
+    # Check if the model type is 'baseline'
+    elif model_type == 'baseline':
+        # Run the baseline method on the dataset
+        yt_objects_baseline(input_folder, output_video, gt_boxes, -1)  # set frame_limit to -1 to use all frames
+
+# Example usage:
+process_mot20("MOT20-07", "detr")
+process_mot20("MOT20-07", "deformable-detr")

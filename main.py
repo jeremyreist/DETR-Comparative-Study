@@ -271,7 +271,7 @@ def process_shot(number_of_frames, model_type):
 
 # Example usage:
 # TODO: add timing to this
-process_shot(20, 'deformable-detr')
-process_shot(20, 'detr')
-process_shot(500, 'deformable-detr')
-process_shot(500, 'detr')
+process_shot(20, 'deformable-detr') # MIOU 0.887
+process_shot(20, 'detr') # MIOU 0.905
+process_shot(500, 'deformable-detr') # 27:44 - MIOU 0.864
+process_shot(500, 'detr') # 10:57 - MIOU 0.9065

@@ -336,7 +336,7 @@ def process_mot20(video_name, model_type):
             detr_preds = pickle.load(open(pickle_path, 'rb'))
         else:
             start_time = time.time()    
-            detr_preds = detr_yt_objects(input_folder, output_video, -1)  # set frame_limit to -1 to use all frames
+            detr_preds = detr_yt_objects(input_folder, output_video, 400)  # set frame_limit to 400 due to GPU memory constraints
             end_time = time.time()
             elapsed_time = end_time - start_time
 
@@ -355,7 +355,7 @@ def process_mot20(video_name, model_type):
             detr_preds = pickle.load(open(pickle_path, 'rb'))
         else:
             start_time = time.time()    
-            detr_preds = deformable_detr_yt_objects(input_folder, output_video, -1)  # set frame_limit to -1 to use all frames
+            detr_preds = deformable_detr_yt_objects(input_folder, output_video, 400)  # set frame_limit to 400 due to GPU memory constraints
             end_time = time.time()
             elapsed_time = end_time - start_time
 
@@ -371,7 +371,7 @@ def process_mot20(video_name, model_type):
     # Check if the model type is 'baseline'
     elif model_type == 'baseline':
         # Run the baseline method on the dataset
-        yt_objects_baseline(input_folder, output_video, gt_boxes, -1)  # set frame_limit to -1 to use all frames
+        yt_objects_baseline(input_folder, output_video, gt_boxes, 400)  # set frame_limit to 400 due to GPU memory constraints
 
 
 print('-' * 80)

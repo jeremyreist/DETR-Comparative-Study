@@ -4,3 +4,6 @@
 /venv/
 .DS_Store
 __pycache__/
+.idea/
+main.py
+torchvision

@@ -1,4 +1,4 @@
-import os, re, cv2, torch, pickle
+import os, re, cv2, torch, pickle, time
 import numpy as np
 from PIL import Image
 from testing_models.detr.detr import detect_objects
@@ -238,6 +238,7 @@ def calculateMIoU(predictions:list, gt_boxes: dict):
 
 # Processes a sequence of frames using either the DETR object detection model or a baseline method and calculates the Mean IoU for the ground truth.
 def process_yt_obj(number_of_frames, model_type):
+
     # Define the input folder path containing YouTube-Objects dataset
     input_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), f'data/YouTube-Objects-2.2/car/')
     
@@ -257,6 +258,7 @@ def process_yt_obj(number_of_frames, model_type):
     # Define output video and pickle file paths
     output_video = os.path.join(os.path.dirname(os.path.abspath(__file__)), f'results/YT-Obj-2.2-{number_of_frames}-{model_type}.mp4')
     pickle_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), f'results/YT-Obj-2.2-{number_of_frames}-{model_type}.pkl')
+    timing_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), f'results/timings.txt')
 
     # Check if the model type is 'detr'
     if model_type == 'detr':
@@ -264,7 +266,14 @@ def process_yt_obj(number_of_frames, model_type):
         if os.path.exists(pickle_path):
             detr_preds = pickle.load(open(pickle_path, 'rb'))
         else:
+            start_time = time.time()
             detr_preds = detr_yt_objects(input_folder, output_video, number_of_frames)
+            end_time = time.time()
+            elapsed_time = end_time - start_time
+
+            with open(timing_file_path, 'a') as f:
+                f.write(f'DETR YT-Obj {number_of_frames}: {elapsed_time} seconds\n')
+
             pickle.dump(detr_preds, open(pickle_path, 'wb'))
 
         # Calculate Mean IoU for ground truth and DETR predictions
@@ -276,7 +285,14 @@ def process_yt_obj(number_of_frames, model_type):
         if os.path.exists(pickle_path):
             detr_preds = pickle.load(open(pickle_path, 'rb'))
         else:
+            start_time = time.time()
             detr_preds = deformable_detr_yt_objects(input_folder, output_video, number_of_frames)
+            end_time = time.time()
+            elapsed_time = end_time - start_time
+
+            with open(timing_file_path, 'a') as f:
+                f.write(f'Deformable-DETR YT-Obj {number_of_frames}: {elapsed_time} seconds\n')
+
             pickle.dump(detr_preds, open(pickle_path, 'wb'))
 
         # Calculate Mean IoU for ground truth and DETR predictions
@@ -290,16 +306,14 @@ def process_yt_obj(number_of_frames, model_type):
 
 
 print('-' * 80)
-process_yt_obj(20, 'deformable-detr') # MIOU 0.887
-process_yt_obj(20, 'detr') # MIOU 0.905
-process_yt_obj(500, 'deformable-detr') # 27:44 - MIOU 0.864
-process_yt_obj(500, 'detr') # 10:57 - MIOU 0.9065
-
+process_yt_obj(3000, 'deformable-detr')
+process_yt_obj(3000, 'detr')
 
 def process_mot20(video_name, model_type):
     base_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data/MOT20/MOT20/test/")
     input_folder = os.path.join(base_folder, video_name, "img1")
     det_txt = os.path.join(base_folder, video_name, "det/det.txt")
+    timing_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), f'results/timings.txt')
 
     # Load ground truth bounding boxes from the det.txt file
     gt_boxes = {}
@@ -321,7 +335,14 @@ def process_mot20(video_name, model_type):
         if os.path.exists(pickle_path):
             detr_preds = pickle.load(open(pickle_path, 'rb'))
         else:
+            start_time = time.time()    
             detr_preds = detr_yt_objects(input_folder, output_video, -1)  # set frame_limit to -1 to use all frames
+            end_time = time.time()
+            elapsed_time = end_time - start_time
+
+            with open(timing_file_path, 'a') as f:
+                f.write(f'DETR MOT20 {video_name}: {elapsed_time} seconds\n')
+
             pickle.dump(detr_preds, open(pickle_path, 'wb'))
 
         # Calculate Mean IoU for ground truth and DETR predictions
@@ -333,7 +354,14 @@ def process_mot20(video_name, model_type):
         if os.path.exists(pickle_path):
             detr_preds = pickle.load(open(pickle_path, 'rb'))
         else:
+            start_time = time.time()    
             detr_preds = deformable_detr_yt_objects(input_folder, output_video, -1)  # set frame_limit to -1 to use all frames
+            end_time = time.time()
+            elapsed_time = end_time - start_time
+
+            with open(timing_file_path, 'a') as f:
+                f.write(f'Deformable-DETR MOT20 {video_name}: {elapsed_time} seconds\n')
+
             pickle.dump(detr_preds, open(pickle_path, 'wb'))
 
         # Calculate Mean IoU for ground truth and DETR predictions
@@ -347,6 +375,10 @@ def process_mot20(video_name, model_type):
 
 
 print('-' * 80)
+process_mot20("MOT20-04", "detr")
+process_mot20("MOT20-04", "deformable-detr")
+process_mot20("MOT20-06", "detr")
+process_mot20("MOT20-06", "deformable-detr")
 process_mot20("MOT20-07", "detr")
 process_mot20("MOT20-07", "deformable-detr")
 print('-' * 80)

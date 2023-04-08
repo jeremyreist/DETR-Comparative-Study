@@ -1,0 +1,36 @@
+!!python/object/new:sacred.config.custom_containers.ReadOnlyDict
+dictitems:
+  data_root_dir: data/MOT20/MOT20/test/MOT20-04/img1
+  dataset_name: DEMO
+  frame_range: !!python/object/new:sacred.config.custom_containers.ReadOnlyDict
+    dictitems:
+      end: 1.0
+      start: 0.0
+    state:
+      message: The configuration is read-only in a captured function!
+  generate_attention_maps: false
+  interpolate: false
+  load_results_dir: null
+  obj_detect_checkpoint_file: models/mot17_crowdhuman_deformable_multi_frame/checkpoint_epoch_40.pth
+  output_dir: data/TEST/
+  seed: 666
+  tracker_cfg: !!python/object/new:sacred.config.custom_containers.ReadOnlyDict
+    dictitems:
+      detection_nms_thresh: 0.9
+      detection_obj_score_thresh: 0.4
+      inactive_patience: -1
+      prev_frame_dist: 1
+      public_detections: false
+      reid_greedy_matching: false
+      reid_score_thresh: 0.4
+      reid_sim_only: false
+      reid_sim_threshold: 0.0
+      steps_termination: 1
+      track_nms_thresh: 0.9
+      track_obj_score_thresh: 0.4
+    state:
+      message: The configuration is read-only in a captured function!
+  verbose: false
+  write_images: pretty
+state:
+  message: The configuration is read-only in a captured function!

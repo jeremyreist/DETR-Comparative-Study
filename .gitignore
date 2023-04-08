@@ -7,3 +7,9 @@ __pycache__/
 .idea/
 main.py
 torchvision
+MultiScaleDeformableAttention.egg-info/
+cfgs/
+data/TEST/
+data/snakeboard/
+dist/
+models/

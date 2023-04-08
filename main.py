@@ -183,73 +183,53 @@ def yt_objects_baseline(input_folder, output_video, gt_boxes, frame_limit):
     out.release()
     cv2.destroyAllWindows()
 
-
 #  Calculates the Mean Intersection over Union (IoU) between the predicted bounding boxes and the ground truth bounding boxes.
-def calculateMIoU_YTObj(predictions, gt_boxes):
+def calculateMIoU(predictions:list, gt_boxes: dict):
+    """ Calculates the Mean Intersection over Union (IoU) between the predicted bounding boxes and the ground truth bounding boxes.
+
+    Args:
+        predictions (list): A list of NumPy arrays, where each array contains the predicted bounding boxes for a frame.
+            e.g. predictions = [array([[x1, y1, x2, y2], [x1, y1, x2, y2], ...]), array([[x1, y1, x2, y2], ...]), ...]
+
+        gt_boxes (dict): A dictionary containing the ground truth bounding boxes for each frame.
+            e.g. gt_boxes = {1: [[x1, y1, x2, y2], [x1, y1, x2, y2], ...], 2: [[x1, y1, x2, y2], ...], ...}
+
+    Returns:
+        float: The mean IoU for the current ground truth set.
+    """
     ious = []
-    # Calculate the intersection over union (IoU) for each predicted bounding box
+    # Convert gt_boxes to a NumPy array
+    gt_boxes = {k: np.array(v) for k, v in gt_boxes.items()}
+
     for i in range(len(predictions)):
-        num = f"car{i:08}"
-        if num in gt_boxes.keys():
-            max_iou = 0
-            # For each bounding box in the frame
-            for j in range(len(predictions[i])):
-                # Calculate the intersection area
-                xA = max(predictions[i][j][0], gt_boxes[num][0])
-                yA = max(predictions[i][j][1], gt_boxes[num][1])
-                xB = min(predictions[i][j][2], gt_boxes[num][2])
-                yB = min(predictions[i][j][3], gt_boxes[num][3])
-                intersection_area = max(0, xB - xA + 1) * max(0, yB - yA + 1)
+        # Convert the current frame's predictions to a NumPy array
+        preds = np.array(predictions[i])
 
-                # Calculate the union area
-                box1_area = (predictions[i][j][2] - predictions[i][j][0] + 1) * (predictions[i][j][3] - predictions[i][j][1] + 1)
-                box2_area = (gt_boxes[num][2] - gt_boxes[num][0] + 1) * (gt_boxes[num][3] - gt_boxes[num][1] + 1)
-                union_area = box1_area + box2_area - intersection_area
+        if i+1 in gt_boxes.keys():
+            for gt in gt_boxes[i+1]:
+                if preds.size > 0:
+                    # Calculate the intersection area
+                    xA = np.maximum(preds[:, 0], gt[0])
+                    yA = np.maximum(preds[:, 1], gt[1])
+                    xB = np.minimum(preds[:, 2], gt[2])
+                    yB = np.minimum(preds[:, 3], gt[3])
+                    intersection_area = np.maximum(0, xB - xA + 1) * np.maximum(0, yB - yA + 1)
 
-                # Calculate the IoU
-                iou = intersection_area / union_area
+                    # Calculate the union area
+                    box1_area = (preds[:, 2] - preds[:, 0] + 1) * (preds[:, 3] - preds[:, 1] + 1)
+                    box2_area = (gt[2] - gt[0] + 1) * (gt[3] - gt[1] + 1)
+                    union_area = box1_area + box2_area - intersection_area
 
-                if iou > max_iou:
-                    max_iou = iou
+                    # Calculate the IoUs
+                    ious_frame = intersection_area / union_area
 
-            # If there is a ground truth bounding box for the current frame, add the IoU to the list
-            ious.append(max_iou)
+                    # Find the maximum IoU
+                    max_iou = np.max(ious_frame)
 
-    # Calculate the mean IoU for the current ground truth set
-    mean_iou = np.mean(ious)
+                else:
+                    max_iou = 0
 
-    return mean_iou
-
-#  Calculates the Mean Intersection over Union (IoU) between the predicted bounding boxes and the ground truth bounding boxes.
-def calculateMIoU_MOT20(predictions, gt_boxes):
-    ious = []
-    # Calculate the intersection over union (IoU) for each predicted bounding box
-    for i in range(len(predictions)):
-        num = f"car{i:08}"
-        if num in gt_boxes.keys():
-            max_iou = 0
-            # For each bounding box in the frame
-            for j in range(len(predictions[i])):
-                # Calculate the intersection area
-                xA = max(predictions[i][j][0], gt_boxes[num][0])
-                yA = max(predictions[i][j][1], gt_boxes[num][1])
-                xB = min(predictions[i][j][2], gt_boxes[num][2])
-                yB = min(predictions[i][j][3], gt_boxes[num][3])
-                intersection_area = max(0, xB - xA + 1) * max(0, yB - yA + 1)
-
-                # Calculate the union area
-                box1_area = (predictions[i][j][2] - predictions[i][j][0] + 1) * (predictions[i][j][3] - predictions[i][j][1] + 1)
-                box2_area = (gt_boxes[num][2] - gt_boxes[num][0] + 1) * (gt_boxes[num][3] - gt_boxes[num][1] + 1)
-                union_area = box1_area + box2_area - intersection_area
-
-                # Calculate the IoU
-                iou = intersection_area / union_area
-
-                if iou > max_iou:
-                    max_iou = iou
-
-            # If there is a ground truth bounding box for the current frame, add the IoU to the list
-            ious.append(max_iou)
+                ious.append(max_iou)
 
     # Calculate the mean IoU for the current ground truth set
     mean_iou = np.mean(ious)
@@ -272,6 +252,8 @@ def process_yt_obj(number_of_frames, model_type):
     for i in gt_boxes_2:
         gt_boxes[i[0][0]] = i[1][0]
 
+    gt_boxes = {int(key[3:]): [value] for key, value in gt_boxes.items()}
+
     # Define output video and pickle file paths
     output_video = os.path.join(os.path.dirname(os.path.abspath(__file__)), f'results/YT-Obj-2.2-{number_of_frames}-{model_type}.mp4')
     pickle_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), f'results/YT-Obj-2.2-{number_of_frames}-{model_type}.pkl')
@@ -286,8 +268,8 @@ def process_yt_obj(number_of_frames, model_type):
             pickle.dump(detr_preds, open(pickle_path, 'wb'))
 
         # Calculate Mean IoU for ground truth and DETR predictions
-        miou = calculateMIoU_YTObj(detr_preds, gt_boxes)
-        print("Mean IoU for ground truth: {}".format(miou))
+        miou = calculateMIoU(detr_preds, gt_boxes)
+        print("MIoU for detr YT-OBJ {}: \t\t\t{}".format(number_of_frames, miou))
 
     elif model_type == 'deformable-detr':
         # Load precomputed deformable DETR predictions if available, otherwise run it on the dataset
@@ -298,8 +280,8 @@ def process_yt_obj(number_of_frames, model_type):
             pickle.dump(detr_preds, open(pickle_path, 'wb'))
 
         # Calculate Mean IoU for ground truth and DETR predictions
-        miou = calculateMIoU_YTObj(detr_preds, gt_boxes)
-        print("Mean IoU for ground truth: {}".format(miou))
+        miou = calculateMIoU(detr_preds, gt_boxes)
+        print("MIoU for deformable-detr YT-OBJ {}: \t\t{}".format(number_of_frames, miou))
 
     # Check if the model type is 'baseline'
     elif model_type == 'baseline':
@@ -307,8 +289,7 @@ def process_yt_obj(number_of_frames, model_type):
         yt_objects_baseline(input_folder, output_video, gt_boxes, number_of_frames)
 
 
-# Example usage:
-# TODO: add timing to this
+print('-' * 80)
 process_yt_obj(20, 'deformable-detr') # MIOU 0.887
 process_yt_obj(20, 'detr') # MIOU 0.905
 process_yt_obj(500, 'deformable-detr') # 27:44 - MIOU 0.864
@@ -344,8 +325,8 @@ def process_mot20(video_name, model_type):
             pickle.dump(detr_preds, open(pickle_path, 'wb'))
 
         # Calculate Mean IoU for ground truth and DETR predictions
-        miou = calculateMIoU_MOT20(detr_preds, gt_boxes)
-        print("Mean IoU for ground truth: {}".format(miou))
+        miou = calculateMIoU(detr_preds, gt_boxes)
+        print("MIoU for detr MOT20: \t\t\t\t{}".format(miou))
 
     elif model_type == 'deformable-detr':
         # Load precomputed deformable DETR predictions if available, otherwise run it on the dataset
@@ -356,16 +337,16 @@ def process_mot20(video_name, model_type):
             pickle.dump(detr_preds, open(pickle_path, 'wb'))
 
         # Calculate Mean IoU for ground truth and DETR predictions
-        miou = calculateMIoU_MOT20(detr_preds, gt_boxes)
-        print("Mean IoU for ground truth: {}".format(miou))
+        miou = calculateMIoU(detr_preds, gt_boxes)
+        print("MIoU for deformable-detr MOT20: \t\t{}".format(miou))
 
     # Check if the model type is 'baseline'
     elif model_type == 'baseline':
         # Run the baseline method on the dataset
         yt_objects_baseline(input_folder, output_video, gt_boxes, -1)  # set frame_limit to -1 to use all frames
 
-# Example usage:
+
+print('-' * 80)
 process_mot20("MOT20-07", "detr")
 process_mot20("MOT20-07", "deformable-detr")
-
-#TODO: fix calculateMIOU function
+print('-' * 80)

@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-import io
+import io, os
 from PIL import Image
 import numpy as np
 
@@ -93,3 +93,22 @@ def visualize_detection_results(pil_img, prob, boxes, selected_class, display_ou
         plt.close()
 
         return img_array
+    
+def compress_mp4_files(input_folder, output_folder):
+    # Create output folder if it doesn't exist
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+
+    # Loop through files in input folder
+    for filename in os.listdir(input_folder):
+        if filename.endswith('.mp4'):
+            # Define input and output paths
+            save_path = os.path.join(input_folder, filename)
+            compressed_path = os.path.join(output_folder, filename)
+
+            # Compress using FFmpeg if the compressed file doesn't already exist
+            if not os.path.exists(compressed_path):
+                os.system(f"ffmpeg -i {save_path} -vcodec libx264 {compressed_path}")
+
+
+compress_mp4_files('results', 'results/compressed')

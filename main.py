@@ -306,8 +306,8 @@ def process_yt_obj(number_of_frames, model_type):
 
 
 print('-' * 80)
-process_yt_obj(3000, 'deformable-detr')
-process_yt_obj(3000, 'detr')
+process_yt_obj(1500, 'detr')
+process_yt_obj(1500, 'deformable-detr')
 
 def process_mot20(video_name, model_type):
     base_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data/MOT20/MOT20/test/")

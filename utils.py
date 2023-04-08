@@ -94,10 +94,14 @@ def visualize_detection_results(pil_img, prob, boxes, selected_class, display_ou
 
         return img_array
     
-def compress_mp4_files(input_folder, output_folder):
+def compress_mp4_files(input_folder, output_folder, crf_value=28):
     # Create output folder if it doesn't exist
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
+
+    # Delete all files in the output folder before compressing new files
+    for filename in os.listdir(output_folder):
+        os.remove(os.path.join(output_folder, filename))
 
     # Loop through files in input folder
     for filename in os.listdir(input_folder):
@@ -108,7 +112,7 @@ def compress_mp4_files(input_folder, output_folder):
 
             # Compress using FFmpeg if the compressed file doesn't already exist
             if not os.path.exists(compressed_path):
-                os.system(f"ffmpeg -i {save_path} -vcodec libx264 {compressed_path}")
+                os.system(f"ffmpeg -i {save_path} -vcodec libx264 -crf {crf_value} {compressed_path}")
 
 
-compress_mp4_files('results', 'results/compressed')
+compress_mp4_files('results', 'results/compressed', 40)

@@ -1,7 +1,7 @@
-# Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 import os
 import sys
 import time
+import pickle
 from os import path as osp
 
 import motmetrics as mm
@@ -47,6 +47,7 @@ def main(seed, dataset_name, obj_detect_checkpoint_file, tracker_cfg,
         mean_iou = np.mean(ious)
 
         return mean_iou
+    
     if write_images:
         assert output_dir is not None
 
@@ -88,10 +89,6 @@ def main(seed, dataset_name, obj_detect_checkpoint_file, tracker_cfg,
             obj_detect_checkpoint_file, map_location=lambda storage, loc: storage)
 
         obj_detect_state_dict = obj_detect_checkpoint['model']
-        # obj_detect_state_dict = {
-        #     k: obj_detect_state_dict[k] if k in obj_detect_state_dict
-        #     else v
-        #     for k, v in obj_detector.state_dict().items()}
 
         obj_detect_state_dict = {
             k.replace('detr.', ''): v
@@ -126,6 +123,9 @@ def main(seed, dataset_name, obj_detect_checkpoint_file, tracker_cfg,
 
     for seq in dataset:
         tracker.reset()
+        video_name = str(seq)
+        model_type = 'trackformer'
+        pickle_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), f'results/MOT20-{video_name}-{model_type}.pkl')
 
         _log.info(f"NOTE: ALL VIDEOS WILL BE CAPPED AT 400 FRAMES DUE TO VRAM LIMITATIONS")
         _log.info(f"------------------")
@@ -202,6 +202,11 @@ def main(seed, dataset_name, obj_detect_checkpoint_file, tracker_cfg,
             plot_sequence(
                 results, seq_loader, osp.join(output_dir, dataset_name, str(seq)),
                 write_images, generate_attention_maps)
+        
+        f = open(pickle_path, 'wb')
+        pickle.dump(results, f)
+        f.close()
+        
 
     if time_total:
         _log.info(f"RUNTIME ALL SEQS (w/o EVAL or IMG WRITE): "

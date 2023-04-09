@@ -1,6 +1,8 @@
 # Trackformer
 Due to Trackformer explicitly requiring Python3.7, we have separated the trackformer testing section into its own
-folder. To execute the Trackformer test:
+folder. We have also limited the number of video frames to 400 due to compute space.
+
+To execute the Trackformer test:
 
 1. Start a new virtual environment ON PYTHON3.7 and follow the instructions
 [here]{https://github.com/timmeinhardt/trackformer/blob/main/docs/INSTALL.md} (only iv is necessary in step 3
@@ -10,15 +12,13 @@ as we are testing on MOT20).
 
 3. Still in the Trackformer folder, run:
 ```
-python src/track.py with \
-    reid \
-    dataset_name=MOT20-ALL \
-    obj_detect_checkpoint_file=models/mot20_crowdhuman_deformable_multi_frame/checkpoint_epoch_50.pth  \
-    output_dir=output
+python src/track.py with  \
+    reid  \
+    dataset_name=MOT20-ALL  \
+    obj_detect_checkpoint_file=models/mot20_crowdhuman_deformable_multi_frame/checkpoint_epoch_50.pth   \
+    write_images=pretty  \
+    output_dir=data/TEST
 ```
-
-If jpg output is desired, append `write_images=pretty` to the end. This is only recommended for singular videos, so
-run it in conjunction with `data_root_dir=/folder/with/images/`.
 
 For convenience, the ffmpeg command to convert the images into video is provided
 

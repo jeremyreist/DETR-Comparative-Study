@@ -1,6 +1,8 @@
 /data/MOT20/
 /data/YouTube-Objects/
 /data/YouTube-Objects-2.2/
+/data/snakeboard/
+data/TEST
 /venv/
 .DS_Store
 __pycache__/

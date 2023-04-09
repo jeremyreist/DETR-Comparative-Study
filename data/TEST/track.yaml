@@ -1,6 +1,6 @@
 !!python/object/new:sacred.config.custom_containers.ReadOnlyDict
 dictitems:
-  data_root_dir: data/MOT20/MOT20/test/MOT20-04/img1
+  data_root_dir: data/MOT20/MOT20/test/MOT20-04/img1/
   dataset_name: DEMO
   frame_range: !!python/object/new:sacred.config.custom_containers.ReadOnlyDict
     dictitems:
@@ -12,7 +12,7 @@ dictitems:
   interpolate: false
   load_results_dir: null
   obj_detect_checkpoint_file: models/mot17_crowdhuman_deformable_multi_frame/checkpoint_epoch_40.pth
-  output_dir: data/TEST/
+  output_dir: data/TEST
   seed: 666
   tracker_cfg: !!python/object/new:sacred.config.custom_containers.ReadOnlyDict
     dictitems:

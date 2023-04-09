@@ -1,4 +1,5 @@
-# Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
+import os, re, cv2, torch, pickle, time
+
 import os
 import sys
 import time
@@ -19,12 +20,9 @@ from trackformer.util.misc import nested_dict_to_namespace
 from trackformer.util.track_utils import (evaluate_mot_accums, get_mot_accum,
                                           interpolate_tracks, plot_sequence)
 
-mm.lap.default_solver = 'lap'
-
 ex = sacred.Experiment('track')
 ex.add_config('cfgs/track.yaml')
 ex.add_named_config('reid', 'cfgs/track_reid.yaml')
-
 
 @ex.automain
 def main(seed, dataset_name, obj_detect_checkpoint_file, tracker_cfg,
@@ -108,14 +106,19 @@ def main(seed, dataset_name, obj_detect_checkpoint_file, tracker_cfg,
     dataset = TrackDatasetFactory(
         dataset_name, root_dir=data_root_dir, img_transform=img_transform)
 
+    count = 0
     for seq in dataset:
         tracker.reset()
+        _log.info(f"NOTE: FRAMES WILL BE CAPPED AT 400 DUE TO VRAM LIMITATIONS")
+        if count > 400:
+            break
+        count += 1
 
         _log.info(f"------------------")
         _log.info(f"TRACK SEQ: {seq}")
 
-        start_frame = int(frame_range['start'] * len(seq))
-        end_frame = int(frame_range['end'] * len(seq))
+        start_frame = int(frame_range['start'] * min(len(seq), 400))
+        end_frame = int(frame_range['end'] * min(len(seq), 400))
 
         seq_loader = DataLoader(
             torch.utils.data.Subset(seq, range(start_frame, end_frame)))
@@ -186,10 +189,10 @@ def main(seed, dataset_name, obj_detect_checkpoint_file, tracker_cfg,
                 results, seq_loader, osp.join(output_dir, dataset_name, str(seq)),
                 write_images, generate_attention_maps)
 
-    if time_total:
-        _log.info(f"RUNTIME ALL SEQS (w/o EVAL or IMG WRITE): "
-                  f"{time_total:.2f} s for {num_frames} frames "
-                  f"({num_frames / time_total:.2f} Hz)")
+    # if time_total:
+    #     _log.info(f"RUNTIME ALL SEQS (w/o EVAL or IMG WRITE): "
+    #               f"{time_total:.2f} s for {num_frames} frames "
+    #               f"({num_frames / time_total:.2f} Hz)")
 
     if obj_detector_model is None:
         _log.info(f"EVAL:")
@@ -203,3 +206,98 @@ def main(seed, dataset_name, obj_detect_checkpoint_file, tracker_cfg,
         return summary
 
     return mot_accums
+
+def process_mot20(video_name, model_type):
+    base_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data/MOT20/MOT20/test/")
+    input_folder = os.path.join(base_folder, video_name, "img1")
+    det_txt = os.path.join(base_folder, video_name, "det/det.txt")
+    timing_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), f'results/timings.txt')
+
+    # Load ground truth bounding boxes from the det.txt file
+    gt_boxes = {}
+    with open(det_txt, "r") as f:
+        for line in f:
+            frame_id, _, x, y, w, h, _, _, _, _ = map(float, line.strip().split(","))
+            frame_id = int(frame_id)
+            if frame_id not in gt_boxes:
+                gt_boxes[frame_id] = []
+            gt_boxes[frame_id].append([x, y, x + w, y + h])
+
+    # Define output video and pickle file paths
+    output_video = os.path.join(os.path.dirname(os.path.abspath(__file__)), f'results/MOT20-{video_name}-{model_type}.mp4')
+    pickle_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), f'results/MOT20-{video_name}-{model_type}.pkl')
+
+    # Check if the model type is 'trackformer'
+    if model_type == 'trackformer':
+        # Load precomputed DETR predictions if available, otherwise run DETR on the dataset
+        if os.path.exists(pickle_path):
+            detr_preds = pickle.load(open(pickle_path, 'rb'))
+        else:
+            start_time = time.time()
+            detr_preds = detr_yt_objects(input_folder, output_video, 400)  # set frame_limit to 400 due to GPU memory constraints
+            end_time = time.time()
+            elapsed_time = end_time - start_time
+
+            with open(timing_file_path, 'a') as f:
+                f.write(f'DETR MOT20 {video_name}: {elapsed_time} seconds\n')
+
+            pickle.dump(detr_preds, open(pickle_path, 'wb'))
+
+        # Calculate Mean IoU for ground truth and DETR predictions
+        miou = calculateMIoU(detr_preds, gt_boxes)
+        print("MIoU for detr MOT20: \t\t\t\t{}".format(miou))
+
+def calculateMIoU(predictions:list, gt_boxes: dict):
+    """ Calculates the Mean Intersection over Union (IoU) between the predicted bounding boxes and the ground truth bounding boxes.
+
+    Args:
+        predictions (list): A list of NumPy arrays, where each array contains the predicted bounding boxes for a frame.
+            e.g. predictions = [array([[x1, y1, x2, y2], [x1, y1, x2, y2], ...]), array([[x1, y1, x2, y2], ...]), ...]
+
+        gt_boxes (dict): A dictionary containing the ground truth bounding boxes for each frame.
+            e.g. gt_boxes = {1: [[x1, y1, x2, y2], [x1, y1, x2, y2], ...], 2: [[x1, y1, x2, y2], ...], ...}
+
+    Returns:
+        float: The mean IoU for the current ground truth set.
+    """
+    ious = []
+    # Convert gt_boxes to a NumPy array
+    gt_boxes = {k: np.array(v) for k, v in gt_boxes.items()}
+
+    for i in range(len(predictions)):
+        # Convert the current frame's predictions to a NumPy array
+        preds = np.array(predictions[i])
+
+        if i+1 in gt_boxes.keys():
+            for gt in gt_boxes[i+1]:
+                if preds.size > 0:
+                    # Calculate the intersection area
+                    xA = np.maximum(preds[:, 0], gt[0])
+                    yA = np.maximum(preds[:, 1], gt[1])
+                    xB = np.minimum(preds[:, 2], gt[2])
+                    yB = np.minimum(preds[:, 3], gt[3])
+                    intersection_area = np.maximum(0, xB - xA + 1) * np.maximum(0, yB - yA + 1)
+
+                    # Calculate the union area
+                    box1_area = (preds[:, 2] - preds[:, 0] + 1) * (preds[:, 3] - preds[:, 1] + 1)
+                    box2_area = (gt[2] - gt[0] + 1) * (gt[3] - gt[1] + 1)
+                    union_area = box1_area + box2_area - intersection_area
+
+                    # Calculate the IoUs
+                    ious_frame = intersection_area / union_area
+
+                    # Find the maximum IoU
+                    max_iou = np.max(ious_frame)
+
+                else:
+                    max_iou = 0
+
+                ious.append(max_iou)
+
+    # Calculate the mean IoU for the current ground truth set
+    mean_iou = np.mean(ious)
+
+    return mean_iou
+
+print('-' * 80)
+# process_mot20("MOT20-04", "trackformer")

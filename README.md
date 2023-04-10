@@ -74,4 +74,5 @@ python setup.py
 ```
 ## Final Paper
 The final paper can be downloaded [here](https://github.com/jeremyreist/DETR-Comparative-Study/blob/main/DETR%20Comparative%20Study.pdf)
+
 ![first page of final paper](https://github.com/jeremyreist/DETR-Comparative-Study/blob/main/notebooks/FirstPage.png?raw=true)

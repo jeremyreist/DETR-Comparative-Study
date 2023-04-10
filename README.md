@@ -9,7 +9,7 @@ To accomplish this goal, we will evaluate the capabilities of these models using
   - [Introduction](#introduction)
   - [Project Layout](#project-layout)
   - [Installation](#installation)
-  - [Usage](#usage)
+  - [Final Paper](#final-paper)
 
 ## Introduction
 The main goal of this project is to perform a comparative study of several recent extensions of DETR for video object detection and tracking. We will apply these models to video clips by breaking them down into frames and running the models on each frame.
@@ -72,6 +72,6 @@ pip install -r requirements.txt
 ```bash
 python setup.py
 ```
-
-## Usage
-(To be updated with instructions on how to use the project)
+## Final Paper
+The final paper can be downloaded [here](https://github.com/jeremyreist/DETR-Comparative-Study/blob/main/DETR%20Comparative%20Study.pdf)
+![first page of final paper](https://github.com/jeremyreist/DETR-Comparative-Study/blob/main/notebooks/FirstPage.png?raw=true)
